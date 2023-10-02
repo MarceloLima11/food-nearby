@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	handler "github.com/MarceloLima11/food-nearby/server/handlers"
+	"github.com/MarceloLima11/food-nearby/server/utils"
 	"github.com/gorilla/mux"
 )
 
@@ -17,15 +18,11 @@ func initializeRoutes() {
 		Addr:    ":8080",
 		Handler: r,
 	}
-
 	routes(r)
 
 	fmt.Print("Server is ready")
 	err := server.ListenAndServe()
-
-	if err != nil {
-		fmt.Print("Erro ao iniciar servidor: ", err)
-	}
+	utils.IfErrThrowFatalf(err, "Error to start server: ")
 }
 
 func routes(router *mux.Router) {

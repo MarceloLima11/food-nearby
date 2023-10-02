@@ -18,15 +18,21 @@ func CreateRestaurant(w http.ResponseWriter, r *http.Request) {
 
 	var restaurant model.Restaurant
 	err := json.NewDecoder(r.Body).Decode(&restaurant)
-	utils.CheckNilError(err)
+	if utils.IfErrThrowWriteError(err, w, utils.DecodeJSON, http.StatusBadRequest) {
+		return
+	}
 
 	validate := validator.New()
 
 	err = validate.Struct(restaurant)
-	utils.CheckNilError(err)
+	if utils.IfErrThrowWriteError(err, w, utils.Validation, http.StatusBadRequest) {
+		return
+	}
 
 	inserted, err := collection.InsertOne(context.Background(), restaurant)
-	utils.CheckNilError(err)
+	if utils.IfErrThrowWriteError(err, w, utils.InsertRestaurant, http.StatusInternalServerError) {
+		return
+	}
 
 	w.WriteHeader(http.StatusCreated)
 	fmt.Printf("Inserted one restaurant with ID:%v", inserted.InsertedID)

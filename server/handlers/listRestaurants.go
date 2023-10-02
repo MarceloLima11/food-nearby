@@ -16,10 +16,14 @@ func ListRestaurants(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Allow-Control-Allow-Methods", "GET")
 
 	longitude, err := strconv.ParseFloat(r.URL.Query().Get("long"), 64)
-	utils.CheckNilError(err)
+	if utils.IfErrThrowWriteError(err, w, utils.InvalidCoordinatesParam, http.StatusBadRequest) {
+		return
+	}
 
 	latitude, err := strconv.ParseFloat(r.URL.Query().Get("lat"), 64)
-	utils.CheckNilError(err)
+	if utils.IfErrThrowWriteError(err, w, utils.InvalidCoordinatesParam, http.StatusBadRequest) {
+		return
+	}
 
 	filter := bson.M{
 		"location": bson.M{
@@ -34,8 +38,8 @@ func ListRestaurants(w http.ResponseWriter, r *http.Request) {
 	}
 
 	cur, err := collection.Find(context.Background(), filter)
-	if err != nil {
-		http.Error(w, "Erro interno do servidor", http.StatusInternalServerError)
+	if utils.IfErrThrowWriteError(err, w, utils.Internal,
+		http.StatusInternalServerError) {
 		return
 	}
 	defer cur.Close(context.Background())
@@ -44,7 +48,7 @@ func ListRestaurants(w http.ResponseWriter, r *http.Request) {
 	for cur.Next(context.Background()) {
 		var restaurant model.Restaurant
 		err := cur.Decode(&restaurant)
-		utils.CheckNilError(err)
+		utils.IfErrThrowWriteError(err, w, utils.Internal, http.StatusInternalServerError)
 		restaurants = append(restaurants, restaurant)
 	}
 

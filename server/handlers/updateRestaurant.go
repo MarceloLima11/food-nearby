@@ -18,19 +18,26 @@ func UpdateRestaurant(w http.ResponseWriter, r *http.Request) {
 
 	var updatedRestaurant model.Restaurant
 	err := json.NewDecoder(r.Body).Decode(&updatedRestaurant)
-	utils.CheckNilError(err)
+	if utils.IfErrThrowWriteError(err, w, utils.DecodeJSON, http.StatusBadRequest) {
+		return
+	}
 
 	validate := validator.New()
 	err = validate.Struct(updatedRestaurant)
-	utils.CheckNilError(err)
+	if utils.IfErrThrowWriteError(err, w, utils.Validation, http.StatusBadRequest) {
+		return
+	}
 
 	filter := bson.M{"_id": restaurantId}
 	update := bson.M{"$set": updatedRestaurant}
 	result, err := collection.UpdateOne(context.TODO(), filter, update)
-	utils.CheckNilError(err)
+	if utils.IfErrThrowWriteError(err, w, utils.Internal, http.StatusInternalServerError) {
+		return
+	}
 
 	if result.ModifiedCount == 0 {
-		http.NotFound(w, r)
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte(utils.DataNotFound))
 		return
 	}
 

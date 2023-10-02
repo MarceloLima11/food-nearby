@@ -1,17 +1,14 @@
 package main
 
 import (
-	"log"
-
 	"github.com/MarceloLima11/food-nearby/server/config"
 	"github.com/MarceloLima11/food-nearby/server/middleware"
+	"github.com/MarceloLima11/food-nearby/server/utils"
 )
 
 func main() {
 	err := config.Init()
-	if err != nil {
-		log.Fatalf("Config initialization error: %v", err)
-	}
+	utils.IfErrThrowFatalf(err, "Config initialization error:")
 
 	middleware.Initialize()
 }

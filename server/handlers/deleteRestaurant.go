@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	"github.com/MarceloLima11/food-nearby/server/utils"
@@ -19,14 +18,23 @@ func DeleteRestaurant(w http.ResponseWriter, r *http.Request) {
 
 	restaurantId := params["id"]
 	id, err := primitive.ObjectIDFromHex(restaurantId)
-	utils.CheckNilError(err)
+	if utils.IfErrThrowWriteError(err, w, utils.InvalidID, http.StatusBadRequest) {
+		return
+	}
 
 	filter := bson.M{"_id": id}
 	delCount, err := collection.DeleteOne(context.Background(), filter)
-	utils.CheckNilError(err)
+	if utils.IfErrThrowWriteError(err, w, utils.DeleteData,
+		http.StatusInternalServerError) {
+		return
+	}
+
+	if delCount.DeletedCount == 0 {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte(utils.DeleteDataNotFound))
+		return
+	}
 
 	w.WriteHeader(http.StatusNoContent)
-
-	response := fmt.Sprintf("Deleted register: %d", delCount.DeletedCount)
-	w.Write([]byte(response))
+	w.Write([]byte(utils.DeleteSuccess))
 }

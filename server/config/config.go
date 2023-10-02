@@ -1,8 +1,7 @@
 package config
 
 import (
-	"fmt"
-
+	"github.com/MarceloLima11/food-nearby/server/utils"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -14,10 +13,7 @@ func Init() error {
 	var err error
 
 	db, err = initializeMongo()
-
-	if err != nil {
-		return fmt.Errorf("Error initializing mongodb: %v", err)
-	}
+	utils.IfErrThrowFatalf(err, "Error initializing mongodb: ")
 
 	return nil
 }

@@ -17,13 +17,17 @@ func ShowRestaurant(w http.ResponseWriter, r *http.Request) {
 	restaurantId := vars["id"]
 
 	objectID, err := primitive.ObjectIDFromHex(restaurantId)
-	utils.CheckNilError(err)
+	if utils.IfErrThrowWriteError(err, w, utils.InvalidID, http.StatusBadRequest) {
+		return
+	}
 
 	filter := bson.M{"_id": objectID}
 
 	var restaurant model.Restaurant
 	err = collection.FindOne(context.Background(), filter).Decode(&restaurant)
-	utils.CheckNilError(err)
+	if utils.IfErrThrowWriteError(err, w, utils.DataNotFound, http.StatusNotFound) {
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(restaurant)
