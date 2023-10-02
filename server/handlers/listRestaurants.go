@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"strconv"
 
+	model "github.com/MarceloLima11/food-nearby/server/models"
 	"github.com/MarceloLima11/food-nearby/server/utils"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func ListRestaurants(w http.ResponseWriter, r *http.Request) {
@@ -34,16 +34,20 @@ func ListRestaurants(w http.ResponseWriter, r *http.Request) {
 	}
 
 	cur, err := collection.Find(context.Background(), filter)
-	utils.CheckNilError(err)
+	if err != nil {
+		http.Error(w, "Erro interno do servidor", http.StatusInternalServerError)
+		return
+	}
+	defer cur.Close(context.Background())
 
-	var restaurants []primitive.M
+	var restaurants []model.Restaurant
 	for cur.Next(context.Background()) {
-		var restaurant bson.M
+		var restaurant model.Restaurant
 		err := cur.Decode(&restaurant)
 		utils.CheckNilError(err)
 		restaurants = append(restaurants, restaurant)
 	}
 
-	defer cur.Close(context.Background())
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(restaurants)
 }
